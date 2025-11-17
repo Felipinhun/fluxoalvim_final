@@ -6,22 +6,36 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { PhoneInput } from '@/components/PhoneInput';
-import { Mic } from 'lucide-react';
+import { Mic, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { FormularioAudio, Webhook } from '@/types';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 const EnviarAudio = () => {
   const [loading, setLoading] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [formData, setFormData] = useState<FormularioAudio>({
     nome: '',
     telefone: '+55',
     mensagem: '',
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmSubmit = async () => {
     setLoading(true);
+    setShowConfirmDialog(false);
 
     try {
       // Buscar webhook do banco
@@ -121,11 +135,57 @@ const EnviarAudio = () => {
               className="w-full h-12 text-base font-semibold"
               disabled={loading}
             >
-              {loading ? 'Enviando...' : 'Enviar Mensagem'}
+              Revisar e Enviar
             </Button>
           </form>
         </CardContent>
       </Card>
+
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="mx-auto w-12 h-12 rounded-full bg-secondary/50 flex items-center justify-center mb-3">
+              <CheckCircle2 className="h-6 w-6 text-secondary-foreground" />
+            </div>
+            <DialogTitle className="text-center text-2xl">Confirmar envio do áudio</DialogTitle>
+            <DialogDescription className="text-center">
+              Revise os dados antes de enviar
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-3 py-4">
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="font-semibold text-muted-foreground">Nome:</div>
+              <div className="text-foreground">{formData.nome}</div>
+              
+              <div className="font-semibold text-muted-foreground">Telefone:</div>
+              <div className="text-foreground">{formData.telefone}</div>
+            </div>
+            
+            <div className="pt-2 border-t">
+              <div className="font-semibold text-muted-foreground text-sm mb-1">Mensagem:</div>
+              <div className="text-sm text-foreground whitespace-pre-wrap">{formData.mensagem}</div>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setShowConfirmDialog(false)}
+              disabled={loading}
+            >
+              Editar
+            </Button>
+            <Button
+              onClick={handleConfirmSubmit}
+              disabled={loading}
+              className="font-semibold"
+            >
+              {loading ? 'Enviando...' : 'Confirmar e Enviar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
