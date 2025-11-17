@@ -6,13 +6,22 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { PhoneInput } from '@/components/PhoneInput';
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { FormularioConsulta, Webhook } from '@/types';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 
 const AgendarRetorno = () => {
   const [loading, setLoading] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [formData, setFormData] = useState<FormularioConsulta>({
     nome: '',
     sobrenome: '',
@@ -22,9 +31,14 @@ const AgendarRetorno = () => {
     observacao: '',
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setShowConfirmDialog(true);
+  };
+
+  const handleConfirmSubmit = async () => {
     setLoading(true);
+    setShowConfirmDialog(false);
 
     try {
       // Buscar webhook do banco
@@ -169,11 +183,65 @@ const AgendarRetorno = () => {
               className="w-full h-12 text-base font-semibold"
               disabled={loading}
             >
-              {loading ? 'Enviando...' : 'Enviar Retorno'}
+              Revisar e Enviar
             </Button>
           </form>
         </CardContent>
       </Card>
+
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="mx-auto w-12 h-12 rounded-full bg-accent/50 flex items-center justify-center mb-3">
+              <CheckCircle2 className="h-6 w-6 text-accent-foreground" />
+            </div>
+            <DialogTitle className="text-center text-2xl">Confirmar dados do retorno</DialogTitle>
+            <DialogDescription className="text-center">
+              Revise os dados antes de enviar
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-3 py-4">
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="font-semibold text-muted-foreground">Nome:</div>
+              <div className="text-foreground">{formData.nome} {formData.sobrenome}</div>
+              
+              <div className="font-semibold text-muted-foreground">Telefone:</div>
+              <div className="text-foreground">{formData.telefone}</div>
+              
+              <div className="font-semibold text-muted-foreground">Data:</div>
+              <div className="text-foreground">{formData.data ? new Date(formData.data + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</div>
+              
+              <div className="font-semibold text-muted-foreground">Horário:</div>
+              <div className="text-foreground">{formData.horario}</div>
+            </div>
+            
+            {formData.observacao && (
+              <div className="pt-2 border-t">
+                <div className="font-semibold text-muted-foreground text-sm mb-1">Observação:</div>
+                <div className="text-sm text-foreground">{formData.observacao}</div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setShowConfirmDialog(false)}
+              disabled={loading}
+            >
+              Editar
+            </Button>
+            <Button
+              onClick={handleConfirmSubmit}
+              disabled={loading}
+              className="font-semibold"
+            >
+              {loading ? 'Enviando...' : 'Confirmar e Enviar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
