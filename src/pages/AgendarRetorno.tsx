@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { RotateCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -17,6 +18,7 @@ const AgendarRetorno = () => {
     telefone: '+55',
     data: '',
     horario: '',
+    observacao: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,6 +51,7 @@ const AgendarRetorno = () => {
           telefone: formData.telefone,
           data: formData.data,
           horario: formData.horario,
+          observacao: formData.observacao,
         }),
       });
 
@@ -67,6 +70,7 @@ const AgendarRetorno = () => {
         telefone: '+55',
         data: '',
         horario: '',
+        observacao: '',
       });
     } catch (error) {
       console.error('Erro:', error);
@@ -159,6 +163,17 @@ const AgendarRetorno = () => {
                   className="h-11"
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="observacao">Observação</Label>
+              <Textarea
+                id="observacao"
+                value={formData.observacao}
+                onChange={(e) => setFormData({ ...formData, observacao: e.target.value })}
+                placeholder="Adicione observações adicionais (opcional)"
+                className="min-h-[100px]"
+              />
             </div>
 
             <Button

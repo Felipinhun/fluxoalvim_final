@@ -16,6 +16,7 @@ export interface FormularioConsulta {
   telefone: string;
   data: string;
   horario: string;
+  observacao: string;
 }
 
 export interface FormularioAudio {
