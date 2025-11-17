@@ -38,35 +38,48 @@ const EnviarAudio = () => {
     setShowConfirmDialog(false);
 
     try {
+      // Obter usuário autenticado
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Salvar no banco de dados
+      const { error: dbError } = await supabase
+        .from('audios_enviados')
+        .insert({
+          user_id: user.id,
+          nome: formData.nome,
+          telefone: formData.telefone,
+          audio_url: formData.mensagem, // Por enquanto salvando como texto
+        });
+
+      if (dbError) {
+        throw dbError;
+      }
+
       // Buscar webhook do banco
-      const { data: webhook, error } = await supabase
+      const { data: webhook } = await supabase
         .from('webhooks')
         .select('*')
         .eq('nome', 'enviar_audio')
         .single();
 
-      if (error || !webhook) {
-        throw new Error('Webhook não encontrado');
+      // Enviar para webhook se existir
+      if (webhook) {
+        const webhookData = webhook as Webhook;
+        const url = new URL(webhookData.url);
+        url.searchParams.append('nome', formData.nome);
+        url.searchParams.append('telefone', formData.telefone);
+        url.searchParams.append('mensagem', formData.mensagem);
+
+        await fetch(url.toString(), {
+          method: webhookData.metodo,
+        }).catch(console.error);
       }
 
-      const webhookData = webhook as Webhook;
-
-      // Construir URL com query params para GET
-      const url = new URL(webhookData.url);
-      url.searchParams.append('nome', formData.nome);
-      url.searchParams.append('telefone', formData.telefone);
-      url.searchParams.append('mensagem', formData.mensagem);
-
-      // Enviar dados para o webhook
-      const response = await fetch(url.toString(), {
-        method: webhookData.metodo,
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao enviar dados');
-      }
-
-      toast.success('Áudio enviado com sucesso!', {
+      toast.success('Mensagem enviada com sucesso!', {
         description: 'Sua mensagem foi recebida.',
       });
 
@@ -78,7 +91,7 @@ const EnviarAudio = () => {
       });
     } catch (error) {
       console.error('Erro:', error);
-      toast.error('Erro ao enviar áudio', {
+      toast.error('Erro ao enviar mensagem', {
         description: 'Por favor, tente novamente.',
       });
     } finally {

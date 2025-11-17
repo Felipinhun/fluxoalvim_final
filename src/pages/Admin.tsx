@@ -1,263 +1,339 @@
 import { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Settings, Save, TestTube2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Calendar, RotateCcw, Mic, Users, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Webhook, Config } from '@/types';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
+interface Agendamento {
+  id: string;
+  nome: string;
+  telefone: string;
+  email: string;
+  data_nascimento: string;
+  created_at: string;
+}
+
+interface Audio {
+  id: string;
+  nome: string;
+  telefone: string;
+  audio_url: string;
+  created_at: string;
+}
 
 const Admin = () => {
-  const [timezone, setTimezone] = useState('America/Sao_Paulo');
-  const [currentTime, setCurrentTime] = useState('');
-  const [webhooks, setWebhooks] = useState<Webhook[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [consultas, setConsultas] = useState<Agendamento[]>([]);
+  const [retornos, setRetornos] = useState<Agendamento[]>([]);
+  const [audios, setAudios] = useState<Audio[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalConsultas: 0,
+    totalRetornos: 0,
+    totalAudios: 0,
+    today: 0,
+  });
 
   useEffect(() => {
     loadData();
-    updateCurrentTime();
-    const interval = setInterval(updateCurrentTime, 1000);
-    return () => clearInterval(interval);
-  }, [timezone]);
+  }, []);
 
   const loadData = async () => {
     try {
-      // Carregar timezone
-      const { data: configData } = await supabase
-        .from('configs')
+      setLoading(true);
+
+      // Carregar consultas
+      const { data: consultasData, error: consultasError } = await supabase
+        .from('agendamentos_consulta')
         .select('*')
-        .eq('chave', 'timezone')
-        .single();
+        .order('created_at', { ascending: false });
 
-      if (configData) {
-        const config = configData as Config;
-        setTimezone(config.valor);
-      }
+      if (consultasError) throw consultasError;
 
-      // Carregar webhooks
-      const { data: webhooksData } = await supabase
-        .from('webhooks')
+      // Carregar retornos
+      const { data: retornosData, error: retornosError } = await supabase
+        .from('agendamentos_retorno')
         .select('*')
-        .order('id');
+        .order('created_at', { ascending: false });
 
-      if (webhooksData) {
-        setWebhooks(webhooksData as Webhook[]);
-      }
+      if (retornosError) throw retornosError;
+
+      // Carregar áudios
+      const { data: audiosData, error: audiosError } = await supabase
+        .from('audios_enviados')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (audiosError) throw audiosError;
+
+      setConsultas(consultasData || []);
+      setRetornos(retornosData || []);
+      setAudios(audiosData || []);
+
+      // Calcular estatísticas
+      const today = new Date().toDateString();
+      const todayCount = [
+        ...(consultasData || []),
+        ...(retornosData || []),
+        ...(audiosData || []),
+      ].filter(item => new Date(item.created_at).toDateString() === today).length;
+
+      setStats({
+        totalConsultas: consultasData?.length || 0,
+        totalRetornos: retornosData?.length || 0,
+        totalAudios: audiosData?.length || 0,
+        today: todayCount,
+      });
+
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
-      toast.error('Erro ao carregar configurações');
-    }
-  };
-
-  const updateCurrentTime = () => {
-    const now = new Date();
-    const timeString = now.toLocaleString('pt-BR', {
-      timeZone: timezone,
-      dateStyle: 'short',
-      timeStyle: 'medium',
-    });
-    setCurrentTime(timeString);
-  };
-
-  const handleSaveTimezone = async () => {
-    setLoading(true);
-    try {
-      const { error } = await supabase
-        .from('configs')
-        .update({ valor: timezone })
-        .eq('chave', 'timezone');
-
-      if (error) throw error;
-
-      toast.success('Fuso horário salvo com sucesso!');
-    } catch (error) {
-      console.error('Erro:', error);
-      toast.error('Erro ao salvar fuso horário');
+      toast.error('Erro ao carregar dados');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUpdateWebhook = async (id: number, field: 'url' | 'metodo', value: string) => {
-    const updatedWebhooks = webhooks.map((w) =>
-      w.id === id ? { ...w, [field]: value } : w
-    );
-    setWebhooks(updatedWebhooks);
-  };
-
-  const handleSaveWebhooks = async () => {
-    setLoading(true);
+  const formatDate = (dateString: string) => {
     try {
-      for (const webhook of webhooks) {
-        const { error } = await supabase
-          .from('webhooks')
-          .update({
-            url: webhook.url,
-            metodo: webhook.metodo,
-          })
-          .eq('id', webhook.id);
-
-        if (error) throw error;
-      }
-
-      toast.success('Webhooks salvos com sucesso!');
-    } catch (error) {
-      console.error('Erro:', error);
-      toast.error('Erro ao salvar webhooks');
-    } finally {
-      setLoading(false);
+      return format(new Date(dateString), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
+    } catch {
+      return dateString;
     }
   };
 
-  const handleTestWebhook = async (webhook: Webhook) => {
-    try {
-      toast.info(`Testando webhook: ${webhook.nome}`);
-      
-      let response;
-      if (webhook.metodo === 'GET') {
-        response = await fetch(webhook.url);
-      } else {
-        response = await fetch(webhook.url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ teste: true }),
-        });
-      }
-
-      if (response.ok) {
-        toast.success(`Webhook "${webhook.nome}" funcionando!`, {
-          description: `Status: ${response.status}`,
-        });
-      } else {
-        toast.warning(`Webhook respondeu com status ${response.status}`);
-      }
-    } catch (error) {
-      console.error('Erro:', error);
-      toast.error(`Erro ao testar webhook "${webhook.nome}"`);
-    }
+  const formatPhone = (phone: string) => {
+    return phone.replace(/^\+55/, '');
   };
 
   return (
     <Layout showBackButton>
-      <div className="space-y-8">
-        <div className="text-center space-y-2">
-          <div className="mx-auto w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-            <Settings className="h-8 w-8 text-primary" />
-          </div>
-          <h1 className="text-4xl font-bold text-foreground">Painel Administrativo</h1>
-          <p className="text-lg text-muted-foreground">
-            Configure o sistema e gerencie webhooks
-          </p>
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-3xl flex items-center gap-3">
+              <Users className="h-8 w-8 text-primary" />
+              Dashboard Administrativo
+            </CardTitle>
+            <CardDescription>
+              Visualize todos os agendamentos, retornos e mensagens
+            </CardDescription>
+          </CardHeader>
+        </Card>
+
+        {/* Estatísticas */}
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardDescription className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                Consultas
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-primary">{stats.totalConsultas}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardDescription className="flex items-center gap-2">
+                <RotateCcw className="h-4 w-4" />
+                Retornos
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-accent">{stats.totalRetornos}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardDescription className="flex items-center gap-2">
+                <Mic className="h-4 w-4" />
+                Mensagens
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-secondary">{stats.totalAudios}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardDescription className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Hoje
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-muted-foreground">{stats.today}</div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Configurações do Sistema */}
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl">Configurações do Sistema</CardTitle>
-            <CardDescription>Gerencie as configurações globais do aplicativo</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="timezone">Fuso Horário</Label>
-              <Select value={timezone} onValueChange={setTimezone}>
-                <SelectTrigger id="timezone" className="h-11">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="America/Sao_Paulo">America/Sao_Paulo (Brasil)</SelectItem>
-                  <SelectItem value="America/New_York">America/New_York (EUA)</SelectItem>
-                  <SelectItem value="Europe/London">Europe/London (Reino Unido)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        {/* Tabelas */}
+        <Tabs defaultValue="consultas" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="consultas">
+              <Calendar className="h-4 w-4 mr-2" />
+              Consultas ({stats.totalConsultas})
+            </TabsTrigger>
+            <TabsTrigger value="retornos">
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Retornos ({stats.totalRetornos})
+            </TabsTrigger>
+            <TabsTrigger value="audios">
+              <Mic className="h-4 w-4 mr-2" />
+              Mensagens ({stats.totalAudios})
+            </TabsTrigger>
+          </TabsList>
 
-            <div className="p-4 rounded-lg bg-muted">
-              <p className="text-sm font-medium text-muted-foreground mb-1">
-                Horário atual no fuso selecionado:
-              </p>
-              <p className="text-2xl font-bold text-foreground">{currentTime}</p>
-            </div>
+          <TabsContent value="consultas">
+            <Card>
+              <CardHeader>
+                <CardTitle>Agendamentos de Consulta</CardTitle>
+                <CardDescription>
+                  Lista de todas as consultas agendadas
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+                ) : consultas.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Nenhuma consulta agendada ainda
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Nome</TableHead>
+                          <TableHead>Telefone</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Data Nascimento</TableHead>
+                          <TableHead>Agendado em</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {consultas.map((consulta) => (
+                          <TableRow key={consulta.id}>
+                            <TableCell className="font-medium">{consulta.nome}</TableCell>
+                            <TableCell>{formatPhone(consulta.telefone)}</TableCell>
+                            <TableCell className="text-sm">{consulta.email}</TableCell>
+                            <TableCell>{format(new Date(consulta.data_nascimento), 'dd/MM/yyyy')}</TableCell>
+                            <TableCell className="text-sm">
+                              <Badge variant="outline">{formatDate(consulta.created_at)}</Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-            <Button onClick={handleSaveTimezone} disabled={loading} className="gap-2">
-              <Save className="h-4 w-4" />
-              Salvar Fuso Horário
-            </Button>
-          </CardContent>
-        </Card>
+          <TabsContent value="retornos">
+            <Card>
+              <CardHeader>
+                <CardTitle>Agendamentos de Retorno</CardTitle>
+                <CardDescription>
+                  Lista de todos os retornos agendados
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+                ) : retornos.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Nenhum retorno agendado ainda
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Nome</TableHead>
+                          <TableHead>Telefone</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Data Nascimento</TableHead>
+                          <TableHead>Agendado em</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {retornos.map((retorno) => (
+                          <TableRow key={retorno.id}>
+                            <TableCell className="font-medium">{retorno.nome}</TableCell>
+                            <TableCell>{formatPhone(retorno.telefone)}</TableCell>
+                            <TableCell className="text-sm">{retorno.email}</TableCell>
+                            <TableCell>{format(new Date(retorno.data_nascimento), 'dd/MM/yyyy')}</TableCell>
+                            <TableCell className="text-sm">
+                              <Badge variant="outline">{formatDate(retorno.created_at)}</Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        {/* Gerenciamento de Webhooks */}
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl">Webhooks</CardTitle>
-            <CardDescription>Configure as URLs e métodos dos webhooks</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="border rounded-lg overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[200px]">Nome do Fluxo</TableHead>
-                    <TableHead>URL do Webhook</TableHead>
-                    <TableHead className="w-[120px]">Método</TableHead>
-                    <TableHead className="w-[100px]">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {webhooks.map((webhook) => (
-                    <TableRow key={webhook.id}>
-                      <TableCell className="font-medium">{webhook.nome}</TableCell>
-                      <TableCell>
-                        <Input
-                          value={webhook.url}
-                          onChange={(e) =>
-                            handleUpdateWebhook(webhook.id, 'url', e.target.value)
-                          }
-                          className="h-9"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          value={webhook.metodo}
-                          onValueChange={(value) =>
-                            handleUpdateWebhook(webhook.id, 'metodo', value)
-                          }
-                        >
-                          <SelectTrigger className="h-9">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="GET">GET</SelectItem>
-                            <SelectItem value="POST">POST</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleTestWebhook(webhook)}
-                          className="gap-1 h-9"
-                        >
-                          <TestTube2 className="h-3 w-3" />
-                          Testar
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-
-            <Button onClick={handleSaveWebhooks} disabled={loading} className="gap-2">
-              <Save className="h-4 w-4" />
-              Salvar Alterações
-            </Button>
-          </CardContent>
-        </Card>
+          <TabsContent value="audios">
+            <Card>
+              <CardHeader>
+                <CardTitle>Mensagens Enviadas</CardTitle>
+                <CardDescription>
+                  Lista de todas as mensagens recebidas
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+                ) : audios.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Nenhuma mensagem enviada ainda
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Nome</TableHead>
+                          <TableHead>Telefone</TableHead>
+                          <TableHead>Mensagem</TableHead>
+                          <TableHead>Enviado em</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {audios.map((audio) => (
+                          <TableRow key={audio.id}>
+                            <TableCell className="font-medium">{audio.nome}</TableCell>
+                            <TableCell>{formatPhone(audio.telefone)}</TableCell>
+                            <TableCell className="max-w-md truncate text-sm">
+                              {audio.audio_url}
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              <Badge variant="outline">{formatDate(audio.created_at)}</Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </Layout>
   );
