@@ -1,7 +1,9 @@
 import { ReactNode, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Settings, Download } from 'lucide-react';
+import { ArrowLeft, Settings, Download, LogOut } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 interface LayoutProps {
   children: ReactNode;
@@ -14,6 +16,13 @@ export const Layout = ({ children, showBackButton = false, showAdminButton = fal
   const location = useLocation();
   const isAdmin = location.pathname === '/admin';
   const [showInstallButton, setShowInstallButton] = useState(false);
+  const { signOut } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut();
+    toast.success('Logout realizado com sucesso!');
+    navigate('/login');
+  };
 
   useEffect(() => {
     // Verificar se o app não está instalado
@@ -65,6 +74,15 @@ export const Layout = ({ children, showBackButton = false, showAdminButton = fal
                 Admin
               </Button>
             )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleLogout}
+              className="rounded-full"
+              title="Sair"
+            >
+              <LogOut className="h-5 w-5" />
+            </Button>
           </div>
         </div>
       </header>
