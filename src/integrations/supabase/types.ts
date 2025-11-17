@@ -14,6 +14,135 @@ export type Database = {
   }
   public: {
     Tables: {
+      agendamentos_consulta: {
+        Row: {
+          bairro: string
+          cep: string
+          cidade: string
+          complemento: string | null
+          created_at: string | null
+          data_nascimento: string
+          email: string
+          endereco: string
+          estado: string
+          id: string
+          nome: string
+          numero: string
+          telefone: string
+          user_id: string
+        }
+        Insert: {
+          bairro: string
+          cep: string
+          cidade: string
+          complemento?: string | null
+          created_at?: string | null
+          data_nascimento: string
+          email: string
+          endereco: string
+          estado: string
+          id?: string
+          nome: string
+          numero: string
+          telefone: string
+          user_id: string
+        }
+        Update: {
+          bairro?: string
+          cep?: string
+          cidade?: string
+          complemento?: string | null
+          created_at?: string | null
+          data_nascimento?: string
+          email?: string
+          endereco?: string
+          estado?: string
+          id?: string
+          nome?: string
+          numero?: string
+          telefone?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      agendamentos_retorno: {
+        Row: {
+          bairro: string
+          cep: string
+          cidade: string
+          complemento: string | null
+          created_at: string | null
+          data_nascimento: string
+          email: string
+          endereco: string
+          estado: string
+          id: string
+          nome: string
+          numero: string
+          telefone: string
+          user_id: string
+        }
+        Insert: {
+          bairro: string
+          cep: string
+          cidade: string
+          complemento?: string | null
+          created_at?: string | null
+          data_nascimento: string
+          email: string
+          endereco: string
+          estado: string
+          id?: string
+          nome: string
+          numero: string
+          telefone: string
+          user_id: string
+        }
+        Update: {
+          bairro?: string
+          cep?: string
+          cidade?: string
+          complemento?: string | null
+          created_at?: string | null
+          data_nascimento?: string
+          email?: string
+          endereco?: string
+          estado?: string
+          id?: string
+          nome?: string
+          numero?: string
+          telefone?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      audios_enviados: {
+        Row: {
+          audio_url: string
+          created_at: string | null
+          id: string
+          nome: string
+          telefone: string
+          user_id: string
+        }
+        Insert: {
+          audio_url: string
+          created_at?: string | null
+          id?: string
+          nome: string
+          telefone: string
+          user_id: string
+        }
+        Update: {
+          audio_url?: string
+          created_at?: string | null
+          id?: string
+          nome?: string
+          telefone?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       configs: {
         Row: {
           chave: string

@@ -41,40 +41,61 @@ const AgendarConsulta = () => {
     setShowConfirmDialog(false);
 
     try {
+      // Obter usuário autenticado
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Salvar no banco de dados
+      const { error: dbError } = await supabase
+        .from('agendamentos_consulta')
+        .insert({
+          user_id: user.id,
+          nome: `${formData.nome} ${formData.sobrenome}`,
+          telefone: formData.telefone,
+          email: user.email || '',
+          data_nascimento: formData.data,
+          cep: '',
+          endereco: '',
+          numero: '',
+          bairro: '',
+          cidade: '',
+          estado: '',
+        });
+
+      if (dbError) {
+        throw dbError;
+      }
+
       // Buscar webhook do banco
-      const { data: webhook, error } = await supabase
+      const { data: webhook } = await supabase
         .from('webhooks')
         .select('*')
         .eq('nome', 'agendar_consulta')
         .single();
 
-      if (error || !webhook) {
-        throw new Error('Webhook não encontrado');
+      // Enviar para webhook se existir
+      if (webhook) {
+        const webhookData = webhook as Webhook;
+        await fetch(webhookData.url, {
+          method: webhookData.metodo,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            nome: formData.nome,
+            sobrenome: formData.sobrenome,
+            telefone: formData.telefone,
+            data: formData.data,
+            horario: formData.horario,
+            observacao: formData.observacao,
+          }),
+        }).catch(console.error);
       }
 
-      const webhookData = webhook as Webhook;
-
-      // Enviar dados para o webhook
-      const response = await fetch(webhookData.url, {
-        method: webhookData.metodo,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          nome: formData.nome,
-          sobrenome: formData.sobrenome,
-          telefone: formData.telefone,
-          data: formData.data,
-          horario: formData.horario,
-          observacao: formData.observacao,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao enviar dados');
-      }
-
-      toast.success('Consulta enviada com sucesso!', {
+      toast.success('Consulta agendada com sucesso!', {
         description: 'Em breve entraremos em contato.',
       });
 
@@ -89,7 +110,7 @@ const AgendarConsulta = () => {
       });
     } catch (error) {
       console.error('Erro:', error);
-      toast.error('Erro ao enviar consulta', {
+      toast.error('Erro ao agendar consulta', {
         description: 'Por favor, tente novamente.',
       });
     } finally {
