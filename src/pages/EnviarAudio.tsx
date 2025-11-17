@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { PhoneInput } from '@/components/PhoneInput';
 import { Mic } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -97,24 +98,11 @@ const EnviarAudio = () => {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="telefone">Telefone com DDD</Label>
-              <Input
-                id="telefone"
-                required
-                type="tel"
-                value={formData.telefone}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9+]/g, '');
-                  setFormData({ ...formData, telefone: value });
-                }}
-                placeholder="+5511999999999"
-                className="h-11"
-              />
-              <p className="text-xs text-muted-foreground">
-                Formato: +55 seguido de DDD e número (apenas números)
-              </p>
-            </div>
+            <PhoneInput
+              value={formData.telefone}
+              onChange={(value) => setFormData({ ...formData, telefone: value })}
+              required
+            />
 
             <div className="space-y-2">
               <Label htmlFor="mensagem">Mensagem</Label>
