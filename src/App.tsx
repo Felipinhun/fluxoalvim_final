@@ -8,6 +8,7 @@ import AgendarConsulta from "./pages/AgendarConsulta";
 import AgendarRetorno from "./pages/AgendarRetorno";
 import EnviarAudio from "./pages/EnviarAudio";
 import Admin from "./pages/Admin";
+import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/agendar-retorno" element={<AgendarRetorno />} />
           <Route path="/enviar-audio" element={<EnviarAudio />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/install" element={<Install />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
