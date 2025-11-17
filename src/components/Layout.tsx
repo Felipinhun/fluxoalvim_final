@@ -1,7 +1,7 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Settings } from 'lucide-react';
+import { ArrowLeft, Settings, Download } from 'lucide-react';
 
 interface LayoutProps {
   children: ReactNode;
@@ -13,6 +13,13 @@ export const Layout = ({ children, showBackButton = false, showAdminButton = fal
   const navigate = useNavigate();
   const location = useLocation();
   const isAdmin = location.pathname === '/admin';
+  const [showInstallButton, setShowInstallButton] = useState(false);
+
+  useEffect(() => {
+    // Verificar se o app não está instalado
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    setShowInstallButton(!isStandalone);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -35,17 +42,30 @@ export const Layout = ({ children, showBackButton = false, showAdminButton = fal
               className="h-12 object-contain"
             />
           </div>
-          {showAdminButton && !isAdmin && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/admin')}
-              className="gap-2"
-            >
-              <Settings className="h-4 w-4" />
-              Admin
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {showInstallButton && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate('/install')}
+                className="rounded-full"
+                title="Instalar App"
+              >
+                <Download className="h-5 w-5" />
+              </Button>
+            )}
+            {showAdminButton && !isAdmin && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/admin')}
+                className="gap-2"
+              >
+                <Settings className="h-4 w-4" />
+                Admin
+              </Button>
+            )}
+          </div>
         </div>
       </header>
       <main className="container mx-auto px-4 py-8 max-w-4xl">
