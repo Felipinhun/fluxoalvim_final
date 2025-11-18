@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TabsContent } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar, RotateCcw, Mic, Users, Clock, Settings, Webhook } from 'lucide-react';
+import { MenuBar } from '@/components/ui/bottom-menu';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -39,6 +40,7 @@ interface Webhook {
 }
 
 const Admin = () => {
+  const [activeTab, setActiveTab] = useState('configs');
   const [consultas, setConsultas] = useState<Agendamento[]>([]);
   const [retornos, setRetornos] = useState<Agendamento[]>([]);
   const [audios, setAudios] = useState<Audio[]>([]);
@@ -52,6 +54,34 @@ const Admin = () => {
     totalAudios: 0,
     today: 0,
   });
+
+  const menuItems = [
+    {
+      icon: (props: React.SVGProps<SVGSVGElement>) => <Settings {...props} />,
+      label: 'Configurações',
+      value: 'configs'
+    },
+    {
+      icon: (props: React.SVGProps<SVGSVGElement>) => <Webhook {...props} />,
+      label: 'Webhooks',
+      value: 'webhooks'
+    },
+    {
+      icon: (props: React.SVGProps<SVGSVGElement>) => <Calendar {...props} />,
+      label: `Consultas (${stats.totalConsultas})`,
+      value: 'consultas'
+    },
+    {
+      icon: (props: React.SVGProps<SVGSVGElement>) => <RotateCcw {...props} />,
+      label: `Retornos (${stats.totalRetornos})`,
+      value: 'retornos'
+    },
+    {
+      icon: (props: React.SVGProps<SVGSVGElement>) => <Mic {...props} />,
+      label: `Mensagens (${stats.totalAudios})`,
+      value: 'audios'
+    }
+  ];
 
   useEffect(() => {
     loadData();
@@ -275,32 +305,16 @@ const Admin = () => {
           </Card>
         </div>
 
-        {/* Tabelas */}
-        <Tabs defaultValue="configs" className="w-full">
-          <TabsList className="flex flex-col h-auto w-full">
-            <TabsTrigger value="configs" className="w-full justify-start">
-              <Settings className="h-4 w-4 mr-2" />
-              Configurações
-            </TabsTrigger>
-            <TabsTrigger value="webhooks" className="w-full justify-start">
-              <Webhook className="h-4 w-4 mr-2" />
-              Webhooks
-            </TabsTrigger>
-            <TabsTrigger value="consultas" className="w-full justify-start">
-              <Calendar className="h-4 w-4 mr-2" />
-              Consultas ({stats.totalConsultas})
-            </TabsTrigger>
-            <TabsTrigger value="retornos" className="w-full justify-start">
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Retornos ({stats.totalRetornos})
-            </TabsTrigger>
-            <TabsTrigger value="audios" className="w-full justify-start">
-              <Mic className="h-4 w-4 mr-2" />
-              Mensagens ({stats.totalAudios})
-            </TabsTrigger>
-          </TabsList>
+        {/* Menu de navegação */}
+        <div className="flex justify-center mb-6">
+          <MenuBar 
+            items={menuItems}
+            activeValue={activeTab}
+            onValueChange={setActiveTab}
+          />
+        </div>
 
-          <TabsContent value="configs">
+          {activeTab === 'configs' && (
             <Card>
               <CardHeader>
                 <CardTitle>Configurações do Sistema</CardTitle>
@@ -330,9 +344,9 @@ const Admin = () => {
                 <Button onClick={handleSaveTimezone}>Salvar Configurações</Button>
               </CardContent>
             </Card>
-          </TabsContent>
+          )}
 
-          <TabsContent value="webhooks">
+          {activeTab === 'webhooks' && (
             <Card>
               <CardHeader>
                 <CardTitle>Webhooks</CardTitle>
@@ -403,9 +417,9 @@ const Admin = () => {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
+          )}
 
-          <TabsContent value="consultas">
+          {activeTab === 'consultas' && (
             <Card>
               <CardHeader>
                 <CardTitle>Agendamentos de Consulta</CardTitle>
@@ -450,9 +464,9 @@ const Admin = () => {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
+          )}
 
-          <TabsContent value="retornos">
+          {activeTab === 'retornos' && (
             <Card>
               <CardHeader>
                 <CardTitle>Agendamentos de Retorno</CardTitle>
@@ -497,9 +511,9 @@ const Admin = () => {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
+          )}
 
-          <TabsContent value="audios">
+          {activeTab === 'audios' && (
             <Card>
               <CardHeader>
                 <CardTitle>Mensagens Enviadas</CardTitle>
@@ -544,8 +558,7 @@ const Admin = () => {
                 )}
               </CardContent>
             </Card>
-          </TabsContent>
-        </Tabs>
+          )}
       </div>
     </Layout>
   );
