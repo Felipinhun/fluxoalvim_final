@@ -4,7 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, RotateCcw, Mic, Users, Clock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Calendar, RotateCcw, Mic, Users, Clock, Settings, Webhook } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -27,10 +31,20 @@ interface Audio {
   created_at: string;
 }
 
+interface Webhook {
+  id: number;
+  nome: string;
+  url: string;
+  metodo: string;
+}
+
 const Admin = () => {
   const [consultas, setConsultas] = useState<Agendamento[]>([]);
   const [retornos, setRetornos] = useState<Agendamento[]>([]);
   const [audios, setAudios] = useState<Audio[]>([]);
+  const [webhooks, setWebhooks] = useState<Webhook[]>([]);
+  const [timezone, setTimezone] = useState('America/Sao_Paulo');
+  const [currentTime, setCurrentTime] = useState('');
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalConsultas: 0,
@@ -41,7 +55,15 @@ const Admin = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+    updateCurrentTime();
+    const timer = setInterval(updateCurrentTime, 1000);
+    return () => clearInterval(timer);
+  }, [timezone]);
+
+  const updateCurrentTime = () => {
+    const now = new Date();
+    setCurrentTime(now.toLocaleString('pt-BR', { timeZone: timezone }));
+  };
 
   const loadData = async () => {
     try {
@@ -71,9 +93,28 @@ const Admin = () => {
 
       if (audiosError) throw audiosError;
 
+      // Carregar webhooks
+      const { data: webhooksData, error: webhooksError } = await supabase
+        .from('webhooks')
+        .select('*')
+        .order('id', { ascending: true });
+
+      if (webhooksError) throw webhooksError;
+
+      // Carregar configurações
+      const { data: configData, error: configError } = await supabase
+        .from('configs')
+        .select('*')
+        .eq('chave', 'timezone')
+        .single();
+
+      if (configError && configError.code !== 'PGRST116') throw configError;
+
       setConsultas(consultasData || []);
       setRetornos(retornosData || []);
       setAudios(audiosData || []);
+      setWebhooks(webhooksData || []);
+      if (configData) setTimezone(configData.valor);
 
       // Calcular estatísticas
       const today = new Date().toDateString();
@@ -108,6 +149,64 @@ const Admin = () => {
 
   const formatPhone = (phone: string) => {
     return phone.replace(/^\+55/, '');
+  };
+
+  const handleSaveTimezone = async () => {
+    try {
+      const { error } = await supabase
+        .from('configs')
+        .upsert({ chave: 'timezone', valor: timezone });
+
+      if (error) throw error;
+      toast.success('Fuso horário salvo com sucesso!');
+    } catch (error) {
+      console.error('Erro ao salvar fuso horário:', error);
+      toast.error('Erro ao salvar fuso horário');
+    }
+  };
+
+  const handleUpdateWebhook = async (id: number, field: 'url' | 'metodo', value: string) => {
+    try {
+      setWebhooks(webhooks.map(w => w.id === id ? { ...w, [field]: value } : w));
+    } catch (error) {
+      console.error('Erro ao atualizar webhook:', error);
+    }
+  };
+
+  const handleSaveWebhooks = async () => {
+    try {
+      for (const webhook of webhooks) {
+        const { error } = await supabase
+          .from('webhooks')
+          .update({ url: webhook.url, metodo: webhook.metodo })
+          .eq('id', webhook.id);
+
+        if (error) throw error;
+      }
+      toast.success('Webhooks salvos com sucesso!');
+    } catch (error) {
+      console.error('Erro ao salvar webhooks:', error);
+      toast.error('Erro ao salvar webhooks');
+    }
+  };
+
+  const handleTestWebhook = async (webhook: Webhook) => {
+    try {
+      const response = await fetch(webhook.url, {
+        method: webhook.metodo,
+        headers: { 'Content-Type': 'application/json' },
+        body: webhook.metodo === 'POST' ? JSON.stringify({ test: true }) : undefined,
+      });
+
+      if (response.ok) {
+        toast.success(`Webhook "${webhook.nome}" testado com sucesso!`);
+      } else {
+        toast.error(`Erro ao testar webhook: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Erro ao testar webhook:', error);
+      toast.error('Erro ao testar webhook');
+    }
   };
 
   return (
@@ -177,8 +276,16 @@ const Admin = () => {
         </div>
 
         {/* Tabelas */}
-        <Tabs defaultValue="consultas" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs defaultValue="configs" className="w-full">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="configs">
+              <Settings className="h-4 w-4 mr-2" />
+              Configurações
+            </TabsTrigger>
+            <TabsTrigger value="webhooks">
+              <Webhook className="h-4 w-4 mr-2" />
+              Webhooks
+            </TabsTrigger>
             <TabsTrigger value="consultas">
               <Calendar className="h-4 w-4 mr-2" />
               Consultas ({stats.totalConsultas})
@@ -192,6 +299,111 @@ const Admin = () => {
               Mensagens ({stats.totalAudios})
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="configs">
+            <Card>
+              <CardHeader>
+                <CardTitle>Configurações do Sistema</CardTitle>
+                <CardDescription>
+                  Configure o fuso horário e outras preferências
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="timezone">Fuso Horário</Label>
+                  <Select value={timezone} onValueChange={setTimezone}>
+                    <SelectTrigger id="timezone">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="America/Sao_Paulo">América/São Paulo (UTC-3)</SelectItem>
+                      <SelectItem value="America/New_York">América/Nova York (UTC-5)</SelectItem>
+                      <SelectItem value="Europe/London">Europa/Londres (UTC+0)</SelectItem>
+                      <SelectItem value="Asia/Tokyo">Ásia/Tóquio (UTC+9)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Horário Atual</Label>
+                  <div className="text-2xl font-bold text-primary">{currentTime}</div>
+                </div>
+                <Button onClick={handleSaveTimezone}>Salvar Configurações</Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="webhooks">
+            <Card>
+              <CardHeader>
+                <CardTitle>Webhooks</CardTitle>
+                <CardDescription>
+                  Configure os webhooks para integração com sistemas externos
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+                ) : webhooks.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Nenhum webhook configurado
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Nome do Fluxo</TableHead>
+                            <TableHead>URL do Webhook</TableHead>
+                            <TableHead>Método</TableHead>
+                            <TableHead>Ações</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {webhooks.map((webhook) => (
+                            <TableRow key={webhook.id}>
+                              <TableCell className="font-medium">{webhook.nome}</TableCell>
+                              <TableCell>
+                                <Input
+                                  value={webhook.url}
+                                  onChange={(e) => handleUpdateWebhook(webhook.id, 'url', e.target.value)}
+                                  className="min-w-[300px]"
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <Select
+                                  value={webhook.metodo}
+                                  onValueChange={(value) => handleUpdateWebhook(webhook.id, 'metodo', value)}
+                                >
+                                  <SelectTrigger className="w-[100px]">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="GET">GET</SelectItem>
+                                    <SelectItem value="POST">POST</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </TableCell>
+                              <TableCell>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleTestWebhook(webhook)}
+                                >
+                                  Testar
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                    <Button onClick={handleSaveWebhooks}>Salvar Alterações</Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="consultas">
             <Card>
