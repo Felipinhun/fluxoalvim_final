@@ -277,30 +277,28 @@ const Admin = () => {
 
         {/* Tabelas */}
         <Tabs defaultValue="configs" className="w-full">
-          <div className="w-full overflow-x-auto">
-            <TabsList className="inline-flex w-auto min-w-full">
-              <TabsTrigger value="configs" className="flex-shrink-0">
-                <Settings className="h-4 w-4 mr-2" />
-                Configurações
-              </TabsTrigger>
-              <TabsTrigger value="webhooks" className="flex-shrink-0">
-                <Webhook className="h-4 w-4 mr-2" />
-                Webhooks
-              </TabsTrigger>
-              <TabsTrigger value="consultas" className="flex-shrink-0">
-                <Calendar className="h-4 w-4 mr-2" />
-                Consultas ({stats.totalConsultas})
-              </TabsTrigger>
-              <TabsTrigger value="retornos" className="flex-shrink-0">
-                <RotateCcw className="h-4 w-4 mr-2" />
-                Retornos ({stats.totalRetornos})
-              </TabsTrigger>
-              <TabsTrigger value="audios" className="flex-shrink-0">
-                <Mic className="h-4 w-4 mr-2" />
-                Mensagens ({stats.totalAudios})
-              </TabsTrigger>
-            </TabsList>
-          </div>
+          <TabsList className="flex flex-col h-auto w-full">
+            <TabsTrigger value="configs" className="w-full justify-start">
+              <Settings className="h-4 w-4 mr-2" />
+              Configurações
+            </TabsTrigger>
+            <TabsTrigger value="webhooks" className="w-full justify-start">
+              <Webhook className="h-4 w-4 mr-2" />
+              Webhooks
+            </TabsTrigger>
+            <TabsTrigger value="consultas" className="w-full justify-start">
+              <Calendar className="h-4 w-4 mr-2" />
+              Consultas ({stats.totalConsultas})
+            </TabsTrigger>
+            <TabsTrigger value="retornos" className="w-full justify-start">
+              <RotateCcw className="h-4 w-4 mr-2" />
+              Retornos ({stats.totalRetornos})
+            </TabsTrigger>
+            <TabsTrigger value="audios" className="w-full justify-start">
+              <Mic className="h-4 w-4 mr-2" />
+              Mensagens ({stats.totalAudios})
+            </TabsTrigger>
+          </TabsList>
 
           <TabsContent value="configs">
             <Card>
