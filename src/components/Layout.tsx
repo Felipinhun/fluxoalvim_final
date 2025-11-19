@@ -1,8 +1,9 @@
 import { ReactNode, useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Settings, Download, LogOut } from 'lucide-react';
+import { ArrowLeft, Settings, Download, LogOut, Moon, Sun } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { toast } from 'sonner';
 
 interface LayoutProps {
@@ -17,6 +18,7 @@ export const Layout = ({ children, showBackButton = false, showAdminButton = fal
   const isAdmin = location.pathname === '/admin';
   const [showInstallButton, setShowInstallButton] = useState(false);
   const { signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   const handleLogout = async () => {
     await signOut();
@@ -52,6 +54,19 @@ export const Layout = ({ children, showBackButton = false, showAdminButton = fal
             />
           </div>
           <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="rounded-full w-8 h-8"
+              title={theme === 'dark' ? 'Modo claro' : 'Modo escuro'}
+            >
+              {theme === 'dark' ? (
+                <Sun className="h-4 w-4" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+            </Button>
             {showInstallButton && (
               <Button
                 variant="ghost"
