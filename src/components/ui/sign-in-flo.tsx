@@ -39,12 +39,12 @@ const AnimatedFormField: React.FC<FormFieldProps> = ({
   return (
     <div className="relative group">
       <div
-        className="relative overflow-hidden rounded-lg border border-border bg-background transition-all duration-300 ease-in-out"
+        className="relative overflow-hidden rounded-lg border border-zinc-700 bg-zinc-800 transition-all duration-300 ease-in-out"
         onMouseMove={handleMouseMove}
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
       >
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors duration-200 group-focus-within:text-primary">
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 transition-colors duration-200 group-focus-within:text-blue-400">
           {icon}
         </div>
         
@@ -54,14 +54,14 @@ const AnimatedFormField: React.FC<FormFieldProps> = ({
           onChange={onChange}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          className="w-full bg-transparent pl-10 pr-12 py-3 text-foreground placeholder:text-muted-foreground focus:outline-none"
+          className="w-full bg-transparent pl-10 pr-12 py-3 text-white placeholder:text-zinc-500 focus:outline-none"
           placeholder=""
         />
         
         <label className={`absolute left-10 transition-all duration-200 ease-in-out pointer-events-none ${
           isFocused || value 
-            ? 'top-2 text-xs text-primary font-medium' 
-            : 'top-1/2 -translate-y-1/2 text-sm text-muted-foreground'
+            ? 'top-2 text-xs text-blue-400 font-medium' 
+            : 'top-1/2 -translate-y-1/2 text-sm text-zinc-400'
         }`}>
           {placeholder}
         </label>
@@ -70,7 +70,7 @@ const AnimatedFormField: React.FC<FormFieldProps> = ({
           <button
             type="button"
             onClick={onToggle}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors"
           >
             {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
@@ -197,77 +197,54 @@ const FloatingParticles: React.FC = () => {
 };
 
 interface SignInFloProps {
-  onSubmit: (data: { email: string; password: string; name?: string; isSignUp: boolean }) => Promise<void>;
+  onSubmit: (data: { email: string; password: string }) => Promise<void>;
   isSubmitting: boolean;
 }
 
 export const SignInFlo: React.FC<SignInFloProps> = ({ onSubmit, isSubmitting }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await onSubmit({ 
       email, 
-      password, 
-      name: isSignUp ? name : undefined, 
-      isSignUp 
+      password
     });
   };
 
-  const toggleMode = () => {
-    setIsSignUp(!isSignUp);
-    setEmail("");
-    setPassword("");
-    setName("");
-    setShowPassword(false);
-  };
-
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4 relative overflow-hidden">
       <FloatingParticles />
       
       <div className="relative z-10 w-full max-w-md">
-        {/* Logo com círculo branco */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center relative">
-            {/* Círculo branco estilizado atrás da logo */}
-            <div className="absolute inset-0 bg-white rounded-full blur-xl opacity-80 scale-110" />
-            <div className="absolute inset-0 bg-gradient-to-br from-white to-gray-100 rounded-full opacity-90" />
-            
-            {/* Logo */}
-            <img 
-              src="/logo.png" 
-              alt="Logo" 
-              className="relative w-24 h-24 object-contain drop-shadow-lg"
-            />
-          </div>
-        </div>
-
-        <div className="bg-card/80 backdrop-blur-xl border border-border rounded-2xl p-8 shadow-2xl">
+        <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 rounded-2xl p-8 shadow-2xl">
+          {/* Logo com círculo branco */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">
-              {isSignUp ? 'Criar Conta' : 'Bem-vindo'}
+            <div className="inline-flex items-center justify-center relative mb-6">
+              {/* Círculo branco estilizado atrás da logo */}
+              <div className="absolute inset-0 bg-white rounded-full blur-xl opacity-80 scale-110" />
+              <div className="absolute inset-0 bg-gradient-to-br from-white to-gray-100 rounded-full opacity-90" />
+              
+              {/* Logo */}
+              <img 
+                src="/logo.png" 
+                alt="Logo" 
+                className="relative w-24 h-24 object-contain drop-shadow-lg"
+              />
+            </div>
+            
+            <h1 className="text-3xl font-bold text-white mb-2">
+              Bem-vindo
             </h1>
-            <p className="text-muted-foreground">
-              {isSignUp ? 'Cadastre-se para começar' : 'Entre para continuar'}
+            <p className="text-zinc-400">
+              Entre para continuar
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {isSignUp && (
-              <AnimatedFormField
-                type="text"
-                placeholder="Nome Completo"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                icon={<User size={18} />}
-              />
-            )}
 
             <AnimatedFormField
               type="email"
@@ -294,52 +271,37 @@ export const SignInFlo: React.FC<SignInFloProps> = ({ onSubmit, isSubmitting }) 
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 text-primary bg-background border-border rounded focus:ring-primary focus:ring-2"
+                  className="w-4 h-4 text-blue-500 bg-zinc-800 border-zinc-700 rounded focus:ring-blue-500 focus:ring-2"
                 />
-                <span className="text-sm text-muted-foreground">Lembrar-me</span>
+                <span className="text-sm text-zinc-400">Lembrar-me</span>
               </label>
               
-              {!isSignUp && (
-                <button
-                  type="button"
-                  className="text-sm text-primary hover:underline"
-                >
-                  Esqueceu a senha?
-                </button>
-              )}
+              <button
+                type="button"
+                className="text-sm text-blue-400 hover:underline"
+              >
+                Esqueceu a senha?
+              </button>
             </div>
 
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full relative group bg-primary text-primary-foreground py-3 px-4 rounded-lg font-medium transition-all duration-300 ease-in-out hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
+              className="w-full relative group bg-blue-600 text-white py-3 px-4 rounded-lg font-medium transition-all duration-300 ease-in-out hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
             >
               <span className={`transition-opacity duration-200 ${isSubmitting ? 'opacity-0' : 'opacity-100'}`}>
-                {isSignUp ? 'Criar Conta' : 'Entrar'}
+                Entrar
               </span>
               
               {isSubmitting && (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 </div>
               )}
               
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
             </button>
           </form>
-
-          <div className="mt-8 text-center">
-            <p className="text-sm text-muted-foreground">
-              {isSignUp ? 'Já tem uma conta?' : "Não tem uma conta?"}{' '}
-              <button
-                type="button"
-                onClick={toggleMode}
-                className="text-primary hover:underline font-medium"
-              >
-                {isSignUp ? 'Entrar' : 'Cadastrar'}
-              </button>
-            </p>
-          </div>
         </div>
       </div>
     </div>
