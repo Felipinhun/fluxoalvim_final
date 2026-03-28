@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { PhoneInput } from '@/components/PhoneInput';
+import { PatientSearch } from '@/components/PatientSearch';
 import { Mic, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -113,6 +114,11 @@ const EnviarAudio = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
+            <PatientSearch
+              onSelect={(p) => setFormData({ ...formData, nome: `${p.nome} ${p.sobrenome}`, telefone: p.telefone })}
+              onClear={() => setFormData({ ...formData, nome: '', telefone: '+55' })}
+            />
+
             <div className="space-y-2">
               <Label htmlFor="nome">Nome do Paciente</Label>
               <Input

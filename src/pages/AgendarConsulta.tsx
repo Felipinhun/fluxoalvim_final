@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { PhoneInput } from '@/components/PhoneInput';
+import { PatientSearch } from '@/components/PatientSearch';
 import { Calendar, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -132,6 +133,11 @@ const AgendarConsulta = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
+            <PatientSearch
+              onSelect={(p) => setFormData({ ...formData, nome: p.nome, sobrenome: p.sobrenome, telefone: p.telefone })}
+              onClear={() => setFormData({ ...formData, nome: '', sobrenome: '', telefone: '+55' })}
+            />
+
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="nome">Nome</Label>
