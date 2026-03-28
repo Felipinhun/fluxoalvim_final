@@ -1,0 +1,1 @@
+ALTER TABLE public.pacientes ALTER COLUMN sobrenome DROP NOT NULL;
