@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
 
     const pacientes = body.map((p: any) => ({
       nome: p.nome,
-      sobrenome: p.sobrenome,
+      sobrenome: p.sobrenome || '',
       telefone: p.telefone,
       email: p.email || null,
       observacao: p.observacao || null,
