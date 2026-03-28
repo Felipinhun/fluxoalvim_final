@@ -114,6 +114,11 @@ const EnviarAudio = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
+            <PatientSearch
+              onSelect={(p) => setFormData({ ...formData, nome: `${p.nome} ${p.sobrenome}`, telefone: p.telefone })}
+              onClear={() => setFormData({ ...formData, nome: '', telefone: '+55' })}
+            />
+
             <div className="space-y-2">
               <Label htmlFor="nome">Nome do Paciente</Label>
               <Input

@@ -133,6 +133,11 @@ const AgendarConsulta = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
+            <PatientSearch
+              onSelect={(p) => setFormData({ ...formData, nome: p.nome, sobrenome: p.sobrenome, telefone: p.telefone })}
+              onClear={() => setFormData({ ...formData, nome: '', sobrenome: '', telefone: '+55' })}
+            />
+
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="nome">Nome</Label>
