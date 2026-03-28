@@ -30,9 +30,9 @@ Deno.serve(async (req) => {
     // Validar campos obrigatórios
     for (let i = 0; i < body.length; i++) {
       const p = body[i]
-      if (!p.nome || !p.sobrenome || !p.telefone) {
+      if (!p.nome || !p.telefone) {
         return new Response(
-          JSON.stringify({ error: `Paciente no índice ${i} falta campo obrigatório (nome, sobrenome, telefone)` }),
+          JSON.stringify({ error: `Paciente no índice ${i} falta campo obrigatório (nome, telefone)` }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         )
       }
