@@ -230,7 +230,7 @@ export const SignInFlo: React.FC<SignInFloProps> = ({ onSubmit, isSubmitting }) 
               
               {/* Logo */}
               <img 
-                src="/logo.png" 
+                src="https://s3.alvimnutri.com.br/automacao/Public/Logo%20preta%20vertical%20sem%20fundo.png" 
                 alt="Logo" 
                 className="relative w-24 h-24 object-contain drop-shadow-lg"
               />
