@@ -134,8 +134,8 @@ const AgendarRetorno = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <PatientSearch
-              onSelect={(p) => setFormData({ ...formData, nome: p.nome, sobrenome: p.sobrenome, telefone: p.telefone })}
-              onClear={() => setFormData({ ...formData, nome: '', sobrenome: '', telefone: '+55' })}
+              onSelect={(p) => setFormData({ ...formData, nome: p.nome, sobrenome: p.sobrenome || '', telefone: p.telefone, observacao: p.observacao || '' })}
+              onClear={() => setFormData({ ...formData, nome: '', sobrenome: '', telefone: '+55', observacao: '' })}
             />
 
             <div className="grid gap-6 md:grid-cols-2">
