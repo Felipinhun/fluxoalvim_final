@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS pacientes_telefone_unique ON public.pacientes (telefone);

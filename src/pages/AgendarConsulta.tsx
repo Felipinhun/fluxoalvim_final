@@ -49,21 +49,13 @@ const AgendarConsulta = () => {
         throw new Error('Usuário não autenticado');
       }
 
-      // Salvar paciente no banco se não existir
-      const { data: existingPatient } = await supabase
-        .from('pacientes')
-        .select('id')
-        .eq('telefone', formData.telefone)
-        .maybeSingle();
-
-      if (!existingPatient) {
-        await supabase.from('pacientes').insert({
-          nome: formData.nome,
-          sobrenome: formData.sobrenome || null,
-          telefone: formData.telefone,
-          observacao: formData.observacao || null,
-        });
-      }
+      // Salvar paciente no banco (upsert por telefone)
+      await supabase.from('pacientes').upsert({
+        nome: formData.nome,
+        sobrenome: formData.sobrenome || null,
+        telefone: formData.telefone,
+        observacao: formData.observacao || null,
+      }, { onConflict: 'telefone' });
 
       // Salvar no banco de dados
       const { error: dbError } = await supabase
@@ -150,7 +142,7 @@ const AgendarConsulta = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <PatientSearch
-              onSelect={(p) => setFormData({ ...formData, nome: p.nome, sobrenome: p.sobrenome || '', telefone: p.telefone, observacao: p.observacao || '' })}
+              onSelect={(p) => setFormData({ ...formData, nome: p.nome, sobrenome: p.sobrenome || '', telefone: p.telefone })}
               onClear={() => setFormData({ ...formData, nome: '', sobrenome: '', telefone: '+55', observacao: '' })}
             />
 
