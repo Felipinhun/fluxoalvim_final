@@ -39,13 +39,24 @@ interface Webhook {
   metodo: string;
 }
 
+interface Paciente {
+  id: string;
+  nome: string;
+  sobrenome: string | null;
+  telefone: string;
+  email: string | null;
+  observacao: string | null;
+  created_at: string;
+}
+
 const Admin = () => {
   const [activeTab, setActiveTab] = useState('configs');
   const [consultas, setConsultas] = useState<Agendamento[]>([]);
   const [retornos, setRetornos] = useState<Agendamento[]>([]);
+  const [pacientes, setPacientes] = useState<Paciente[]>([]);
   const [audios, setAudios] = useState<Audio[]>([]);
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
-  const [timezone, setTimezone] = useState('America/Sao_Paulo');
+  const [searchTerm, setSearchTerm] = useState('');
   const [currentTime, setCurrentTime] = useState('');
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -66,8 +77,13 @@ const Admin = () => {
       label: 'Webhooks',
       value: 'webhooks'
     },
-    {
-      icon: (props: React.SVGProps<SVGSVGElement>) => <Calendar {...props} />,
+      {
+        icon: (props: React.SVGProps<SVGSVGElement>) => <Users {...props} />,
+        label: 'Pacientes',
+        value: 'pacientes'
+      },
+      {
+        icon: (props: React.SVGProps<SVGSVGElement>) => <Calendar {...props} />,
       label: `Consultas (${stats.totalConsultas})`,
       value: 'consultas'
     },
@@ -123,6 +139,14 @@ const Admin = () => {
 
       if (audiosError) throw audiosError;
 
+      // Carregar pacientes
+      const { data: pacientesData, error: pacientesError } = await supabase
+        .from('pacientes')
+        .select('*')
+        .order('nome', { ascending: true });
+
+      if (pacientesError) throw pacientesError;
+
       // Carregar webhooks
       const { data: webhooksData, error: webhooksError } = await supabase
         .from('webhooks')
@@ -142,6 +166,7 @@ const Admin = () => {
 
       setConsultas(consultasData || []);
       setRetornos(retornosData || []);
+      setPacientes(pacientesData || []);
       setAudios(audiosData || []);
       setWebhooks(webhooksData || []);
       if (configData) setTimezone(configData.valor);
@@ -413,6 +438,92 @@ const Admin = () => {
                       </Table>
                     </div>
                     <Button onClick={handleSaveWebhooks}>Salvar Alterações</Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {activeTab === 'pacientes' && (
+            <Card>
+              <CardHeader>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div>
+                    <CardTitle>Base de Pacientes</CardTitle>
+                    <CardDescription>
+                      Todos os clientes cadastrados no sistema
+                    </CardDescription>
+                  </div>
+                  <div className="relative w-full md:w-64">
+                    <Input
+                      placeholder="Buscar paciente..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-8"
+                    />
+                    <Users className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {loading ? (
+                  <div className="text-center py-8 text-muted-foreground">Carregando...</div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Nome Completo</TableHead>
+                          <TableHead>Telefone</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Observações</TableHead>
+                          <TableHead>Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {pacientes
+                          .filter(p => 
+                            p.nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                            (p.sobrenome?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                            p.telefone.includes(searchTerm)
+                          )
+                          .map((paciente) => (
+                          <TableRow key={paciente.id}>
+                            <TableCell className="font-medium">
+                              {paciente.nome} {paciente.sobrenome}
+                            </TableCell>
+                            <TableCell>{formatPhone(paciente.telefone)}</TableCell>
+                            <TableCell className="text-sm">{paciente.email || '-'}</TableCell>
+                            <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground">
+                              {paciente.observacao || '-'}
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const phone = paciente.telefone.replace(/\D/g, '');
+                                  window.open(`https://wa.me/${phone.startsWith('55') ? phone : '55' + phone}`, '_blank');
+                                }}
+                              >
+                                WhatsApp
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {pacientes.length > 0 && pacientes.filter(p => 
+                            p.nome.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                            (p.sobrenome?.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                            p.telefone.includes(searchTerm)
+                          ).length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
+                              Nenhum paciente encontrado com esse termo.
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
                   </div>
                 )}
               </CardContent>
