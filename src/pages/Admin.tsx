@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, RotateCcw, Mic, Users, Clock, Settings, Webhook } from 'lucide-react';
+import { Calendar, RotateCcw, Mic, Users, Clock, Settings, Webhook, MessageCircle } from 'lucide-react';
 import { MenuBar } from '@/components/ui/bottom-menu';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -466,19 +466,19 @@ const Admin = () => {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="px-2 sm:px-6">
                 {loading ? (
                   <div className="text-center py-8 text-muted-foreground">Carregando...</div>
                 ) : (
-                  <div className="overflow-x-auto">
+                  <div className="overflow-hidden">
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Nome Completo</TableHead>
-                          <TableHead>Telefone</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Observações</TableHead>
-                          <TableHead>Ações</TableHead>
+                          <TableHead className="w-[40%]">Nome</TableHead>
+                          <TableHead className="w-[30%]">Telefone</TableHead>
+                          <TableHead className="hidden md:table-cell">Email</TableHead>
+                          <TableHead className="hidden lg:table-cell">Observações</TableHead>
+                          <TableHead className="text-right">Ação</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -490,24 +490,35 @@ const Admin = () => {
                           )
                           .map((paciente) => (
                           <TableRow key={paciente.id}>
-                            <TableCell className="font-medium">
-                              {paciente.nome} {paciente.sobrenome}
+                            <TableCell className="font-medium py-4">
+                              <div className="flex flex-col">
+                                <span>{paciente.nome} {paciente.sobrenome}</span>
+                                <span className="text-[10px] text-muted-foreground md:hidden truncate max-w-[120px]">
+                                  {paciente.email}
+                                </span>
+                              </div>
                             </TableCell>
-                            <TableCell>{formatPhone(paciente.telefone)}</TableCell>
-                            <TableCell className="text-sm">{paciente.email || '-'}</TableCell>
-                            <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground">
+                            <TableCell className="text-sm">
+                              {formatPhone(paciente.telefone)}
+                            </TableCell>
+                            <TableCell className="hidden md:table-cell text-xs">
+                              {paciente.email || '-'}
+                            </TableCell>
+                            <TableCell className="hidden lg:table-cell max-w-[150px] truncate text-xs text-muted-foreground">
                               {paciente.observacao || '-'}
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="text-right">
                               <Button
-                                variant="outline"
-                                size="sm"
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                title="Abrir WhatsApp"
                                 onClick={() => {
                                   const phone = paciente.telefone.replace(/\D/g, '');
                                   window.open(`https://wa.me/${phone.startsWith('55') ? phone : '55' + phone}`, '_blank');
                                 }}
                               >
-                                WhatsApp
+                                <MessageCircle className="h-5 w-5" />
                               </Button>
                             </TableCell>
                           </TableRow>
