@@ -57,6 +57,7 @@ const Admin = () => {
   const [audios, setAudios] = useState<Audio[]>([]);
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [timezone, setTimezone] = useState('America/Sao_Paulo');
   const [currentTime, setCurrentTime] = useState('');
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
