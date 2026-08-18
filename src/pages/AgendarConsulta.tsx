@@ -7,14 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { PhoneInput } from '@/components/PhoneInput';
 import { PatientSearch } from '@/components/PatientSearch';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Calendar, CheckCircle2 } from 'lucide-react';
+import { Calendar, CheckCircle2, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { FormularioConsulta, Webhook } from '@/types';
@@ -224,20 +217,23 @@ const AgendarConsulta = () => {
 
             <div className="space-y-2">
               <Label htmlFor="tipo_avaliacao">Tipo de Avaliação</Label>
-              <Select
-                value={formData.tipo_avaliacao || undefined}
-                onValueChange={(value) => setFormData({ ...formData, tipo_avaliacao: value })}
-              >
-                <SelectTrigger id="tipo_avaliacao" className="h-11 bg-background">
-                  <SelectValue placeholder="Selecione o tipo de avaliação" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Dobras">Dobras</SelectItem>
-                  <SelectItem value="Bioimpedância">Bioimpedância</SelectItem>
-                  <SelectItem value="Ambos">Ambos</SelectItem>
-                  <SelectItem value="A definir">A definir</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="relative">
+                <select
+                  id="tipo_avaliacao"
+                  value={formData.tipo_avaliacao}
+                  onChange={(e) => setFormData({ ...formData, tipo_avaliacao: e.target.value })}
+                  className="flex h-11 w-full appearance-none rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm text-foreground ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+                >
+                  <option value="" disabled className="text-muted-foreground">
+                    Selecione o tipo de avaliação
+                  </option>
+                  <option value="Dobras">Dobras</option>
+                  <option value="Bioimpedância">Bioimpedância</option>
+                  <option value="Ambos">Ambos</option>
+                  <option value="A definir">A definir</option>
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50 pointer-events-none text-foreground" />
+              </div>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
