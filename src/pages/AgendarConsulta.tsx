@@ -225,10 +225,10 @@ const AgendarConsulta = () => {
             <div className="space-y-2">
               <Label htmlFor="tipo_avaliacao">Tipo de Avaliação</Label>
               <Select
-                value={formData.tipo_avaliacao}
+                value={formData.tipo_avaliacao || undefined}
                 onValueChange={(value) => setFormData({ ...formData, tipo_avaliacao: value })}
               >
-                <SelectTrigger id="tipo_avaliacao" className="h-11">
+                <SelectTrigger id="tipo_avaliacao" className="h-11 bg-background">
                   <SelectValue placeholder="Selecione o tipo de avaliação" />
                 </SelectTrigger>
                 <SelectContent>
