@@ -7,6 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { PhoneInput } from '@/components/PhoneInput';
 import { PatientSearch } from '@/components/PatientSearch';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Calendar, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -27,6 +34,8 @@ const AgendarConsulta = () => {
     nome: '',
     sobrenome: '',
     telefone: '+55',
+    email: '',
+    tipo_avaliacao: '',
     data: '',
     horario: '',
     observacao: '',
@@ -54,6 +63,7 @@ const AgendarConsulta = () => {
         nome: formData.nome,
         sobrenome: formData.sobrenome || null,
         telefone: formData.telefone,
+        email: formData.email || null,
         observacao: formData.observacao || null,
       }, { onConflict: 'telefone' });
 
@@ -64,7 +74,7 @@ const AgendarConsulta = () => {
           user_id: user.id,
           nome: `${formData.nome} ${formData.sobrenome}`,
           telefone: formData.telefone,
-          email: user.email || '',
+          email: formData.email || user.email || '',
           data_nascimento: formData.data,
           cep: '',
           endereco: '',
@@ -97,6 +107,8 @@ const AgendarConsulta = () => {
             nome: formData.nome,
             sobrenome: formData.sobrenome,
             telefone: formData.telefone,
+            email: formData.email,
+            tipo_avaliacao: formData.tipo_avaliacao,
             data: formData.data,
             horario: formData.horario,
             observacao: formData.observacao,
@@ -113,6 +125,8 @@ const AgendarConsulta = () => {
         nome: '',
         sobrenome: '',
         telefone: '+55',
+        email: '',
+        tipo_avaliacao: '',
         data: '',
         horario: '',
         observacao: '',
@@ -142,8 +156,26 @@ const AgendarConsulta = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <PatientSearch
-              onSelect={(p) => setFormData({ ...formData, nome: p.nome, sobrenome: p.sobrenome || '', telefone: p.telefone })}
-              onClear={() => setFormData({ ...formData, nome: '', sobrenome: '', telefone: '+55', observacao: '' })}
+              onSelect={(p) =>
+                setFormData({
+                  ...formData,
+                  nome: p.nome,
+                  sobrenome: p.sobrenome || '',
+                  telefone: p.telefone,
+                  email: p.email || formData.email,
+                })
+              }
+              onClear={() =>
+                setFormData({
+                  ...formData,
+                  nome: '',
+                  sobrenome: '',
+                  telefone: '+55',
+                  email: '',
+                  tipo_avaliacao: '',
+                  observacao: '',
+                })
+              }
             />
 
             <div className="grid gap-6 md:grid-cols-2">
@@ -171,11 +203,42 @@ const AgendarConsulta = () => {
               </div>
             </div>
 
-            <PhoneInput
-              value={formData.telefone}
-              onChange={(value) => setFormData({ ...formData, telefone: value })}
-              required
-            />
+            <div className="grid gap-6 md:grid-cols-2">
+              <PhoneInput
+                value={formData.telefone}
+                onChange={(value) => setFormData({ ...formData, telefone: value })}
+                required
+              />
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="exemplo@email.com"
+                  className="h-11"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tipo_avaliacao">Tipo de Avaliação</Label>
+              <Select
+                value={formData.tipo_avaliacao}
+                onValueChange={(value) => setFormData({ ...formData, tipo_avaliacao: value })}
+              >
+                <SelectTrigger id="tipo_avaliacao" className="h-11">
+                  <SelectValue placeholder="Selecione o tipo de avaliação" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Dobras">Dobras</SelectItem>
+                  <SelectItem value="Bioimpedância">Bioimpedância</SelectItem>
+                  <SelectItem value="Ambos">Ambos</SelectItem>
+                  <SelectItem value="A definir">A definir</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-2">
@@ -243,6 +306,20 @@ const AgendarConsulta = () => {
               
               <div className="font-semibold text-muted-foreground">Telefone:</div>
               <div className="text-foreground">{formData.telefone}</div>
+
+              {formData.email && (
+                <>
+                  <div className="font-semibold text-muted-foreground">Email:</div>
+                  <div className="text-foreground">{formData.email}</div>
+                </>
+              )}
+
+              {formData.tipo_avaliacao && (
+                <>
+                  <div className="font-semibold text-muted-foreground">Tipo de Avaliação:</div>
+                  <div className="text-foreground">{formData.tipo_avaliacao}</div>
+                </>
+              )}
               
               <div className="font-semibold text-muted-foreground">Data:</div>
               <div className="text-foreground">{formData.data ? new Date(formData.data + 'T00:00:00').toLocaleDateString('pt-BR') : ''}</div>

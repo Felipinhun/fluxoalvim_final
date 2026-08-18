@@ -14,6 +14,8 @@ export interface FormularioConsulta {
   nome: string;
   sobrenome: string;
   telefone: string;
+  email: string;
+  tipo_avaliacao: string;
   data: string;
   horario: string;
   observacao: string;
